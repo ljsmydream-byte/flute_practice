@@ -91,26 +91,25 @@
   .song-title { font-size: 0.95rem; font-weight: 400; flex: 1; }
   .song-arrow { font-size: 0.65rem; color: var(--muted); transition: transform 0.2s; }
   .song-header.open .song-arrow { transform: rotate(90deg); }
-  .song-body { display: none; border-top: 1px solid var(--border); }
-  .song-body.open { display: block; }
+  .song-body { display: block; border-top: 1px solid var(--border); }
 
-  /* ── 탭 ── */
-  .tabs { display: flex; border-bottom: 1px solid var(--border); }
-  .tab-btn {
-    padding: 0.65rem 1.1rem;
-    font-family: var(--serif);
-    font-size: 0.78rem;
-    color: var(--muted);
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    letter-spacing: 0.05em;
-    transition: color 0.2s, border-color 0.2s;
+  /* ── 섹션 레이블 ── */
+  .section-label {
+    font-size: 0.72rem; color: var(--accent); letter-spacing: 0.12em;
+    padding: 0.8rem 1.2rem 0.4rem;
+    border-top: 1px solid var(--border);
+    opacity: 0.7;
   }
-  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .tab-pane { display: none; padding: 1.2rem; }
-  .tab-pane.active { display: block; }
+  .section-label:first-of-type { border-top: none; }
+  .section-body { padding: 0.8rem 1.2rem 1.2rem; }
+
+  /* ── 참고영상 임베드 ── */
+  .ref-embed-wrap {
+    margin-bottom: 1rem;
+  }
+  .ref-embed-title {
+    font-size: 0.78rem; color: var(--muted); margin-bottom: 0.5rem; letter-spacing: 0.04em;
+  }
 
   /* ── 유튜브 플레이어 ── */
   .yt-frame-wrap {
@@ -309,18 +308,20 @@ function renderAll(data) {
     const sec = document.createElement('div');
     sec.className = 'month-section';
     sec.innerHTML = `
-      <div class="month-toggle" onclick="toggleMonth(this)">
-        <span class="arrow">▶</span>
+      <div class="month-toggle open" onclick="toggleMonth(this)">
+        <span class="arrow" style="transform:rotate(90deg)">▶</span>
         <span class="month-label">${m.month}</span>
         <span class="count">${m.songs.length}곡</span>
       </div>
-      <div class="month-body">
+      <div class="month-body open">
         ${m.songs.map((s, si) => renderSong(s, `m${mi}s${si}`)).join('')}
       </div>`;
     app.appendChild(sec);
     m.songs.forEach((s, si) => {
       const sid = `m${mi}s${si}`;
       players[sid] = { ptA: null, ptB: null, loopCount: 0, loopDone: 0, abActive: false, ticker: null, player: null };
+      const vid = extractVideoId(s.youtube);
+      if (vid) setTimeout(() => initPlayer(sid, vid), 300);
     });
   });
 }
@@ -335,16 +336,12 @@ function renderSong(s, sid) {
     <div class="song-header" onclick="toggleSong(this, '${sid}', '${vid}')">
       <span class="song-num">${sid.split('s')[1] * 1 + 1}</span>
       <span class="song-title">${s.title}</span>
-      <span class="song-arrow">▶</span>
+      <span class="song-arrow open">▼</span>
     </div>
     <div class="song-body" id="body-${sid}">
-      <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('${sid}','play',this)">▶ 연습 플레이어</button>
-        ${hasPdf ? `<button class="tab-btn" onclick="switchTab('${sid}','pdf',this)">📄 악보</button>` : ''}
-        ${hasRefs ? `<button class="tab-btn" onclick="switchTab('${sid}','refs',this)">🎬 참고영상</button>` : ''}
-      </div>
 
-      <div class="tab-pane active" id="${sid}-play">
+      <div class="section-label">▶ 연습 플레이어</div>
+      <div class="section-body">
         <div class="yt-frame-wrap">
           <div id="yt-${sid}"></div>
         </div>
@@ -375,7 +372,8 @@ function renderSong(s, sid) {
       </div>
 
       ${hasPdf ? `
-      <div class="tab-pane" id="${sid}-pdf">
+      <div class="section-label">📄 악보</div>
+      <div class="section-body">
         <a class="pdf-link" href="${s.pdf}" target="_blank">
           <span class="pdf-icon">📄</span>
           <span>${s.title} — 악보 열기 (Google Drive)</span>
@@ -384,15 +382,17 @@ function renderSong(s, sid) {
       </div>` : ''}
 
       ${hasRefs ? `
-      <div class="tab-pane" id="${sid}-refs">
-        <div class="ref-videos">
-          ${s.refs.map(r => `
-          <a class="ref-item" href="${r.url}" target="_blank">
-            <span>🎬</span>
-            <span>${r.title}</span>
-          </a>`).join('')}
-        </div>
+      <div class="section-label">🎬 참고영상</div>
+      <div class="section-body">
+        ${s.refs.map(r => `
+        <div class="ref-embed-wrap">
+          <div class="ref-embed-title">🎬 ${r.title}</div>
+          <div class="yt-frame-wrap">
+            <iframe src="https://www.youtube.com/embed/${extractVideoId(r.url)}" frameborder="0" allowfullscreen></iframe>
+          </div>
+        </div>`).join('')}
       </div>` : ''}
+
     </div>
   </div>`;
 }
@@ -405,16 +405,12 @@ function toggleMonth(el) {
 function toggleSong(el, sid, vid) {
   el.classList.toggle('open');
   const body = document.getElementById('body-' + sid);
-  body.classList.toggle('open');
-  if (body.classList.contains('open') && !players[sid].player) {
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  el.querySelector('.song-arrow').textContent = isOpen ? '▶' : '▼';
+  if (!isOpen && !players[sid].player) {
     initPlayer(sid, vid);
   }
-}
-function switchTab(sid, tab, btn) {
-  btn.closest('.song-body').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  btn.closest('.song-body').querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.getElementById(sid + '-' + tab).classList.add('active');
 }
 
 // ── 유튜브 ────────────────────────────────────
