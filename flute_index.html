@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎵 플루트 연습 모음</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0f11;
+    --surface: #16181c;
+    --card: #1c1f25;
+    --border: #2a2d35;
+    --accent: #c9a96e;
+    --accent2: #7eb8c9;
+    --text: #e8e4dc;
+    --muted: #6b7080;
+    --serif: 'Noto Serif KR', serif;
+    --mono: 'DM Mono', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--serif);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+  header {
+    text-align: center;
+    padding: 2rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+  header h1 {
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+  }
+  header p { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; letter-spacing: 0.1em; }
+
+  /* ── 월 섹션 ── */
+  .month-section { margin-bottom: 1.5rem; }
+  .month-toggle {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.9rem 1.2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.2s;
+  }
+  .month-toggle:hover { border-color: var(--accent); }
+  .month-toggle .arrow {
+    font-size: 0.7rem; color: var(--muted);
+    transition: transform 0.25s;
+    display: inline-block;
+  }
+  .month-toggle.open .arrow { transform: rotate(90deg); }
+  .month-toggle .month-label {
+    font-size: 1rem; font-weight: 600; color: var(--accent); letter-spacing: 0.08em;
+  }
+  .month-toggle .count {
+    margin-left: auto; font-size: 0.75rem; color: var(--muted); font-family: var(--mono);
+  }
+  .month-body { display: none; padding: 1rem 0 0; }
+  .month-body.open { display: block; }
+
+  /* ── 곡 카드 ── */
+  .song-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+  .song-header {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.9rem 1.2rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .song-header:hover { background: rgba(201,169,110,0.06); }
+  .song-num {
+    font-family: var(--mono); font-size: 0.7rem; color: var(--muted);
+    background: var(--bg); border-radius: 4px; padding: 2px 6px;
+    min-width: 28px; text-align: center;
+  }
+  .song-title { font-size: 0.95rem; font-weight: 400; flex: 1; }
+  .song-arrow { font-size: 0.65rem; color: var(--muted); transition: transform 0.2s; }
+  .song-header.open .song-arrow { transform: rotate(90deg); }
+  .song-body { display: none; border-top: 1px solid var(--border); }
+  .song-body.open { display: block; }
+
+  /* ── 탭 ── */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .tab-btn {
+    padding: 0.65rem 1.1rem;
+    font-family: var(--serif);
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-pane { display: none; padding: 1.2rem; }
+  .tab-pane.active { display: block; }
+
+  /* ── 유튜브 플레이어 ── */
+  .yt-frame-wrap {
+    width: 100%; aspect-ratio: 16/9;
+    background: #000;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+  .yt-frame-wrap iframe { width: 100%; height: 100%; border: none; }
+
+  .time-display {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    text-align: center;
+    color: var(--accent2);
+    margin-bottom: 0.8rem;
+    letter-spacing: 2px;
+  }
+  .ab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 0.8rem; }
+  .ab-pt {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .ab-pt:hover { border-color: var(--accent); }
+  .ab-pt.set { border-color: var(--accent2); }
+  .ab-pt .pt-label { font-size: 0.68rem; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.05em; }
+  .ab-pt.set .pt-label { color: var(--accent2); }
+  .ab-pt .pt-val { font-family: var(--mono); font-size: 0.95rem; color: var(--text); }
+  .ab-pt.set .pt-val { color: var(--accent2); }
+
+  .loop-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.8rem; }
+  .loop-row label { font-size: 0.78rem; color: var(--muted); flex: 1; }
+  .loop-num { display: flex; align-items: center; gap: 8px; }
+  .loop-num button {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); font-size: 1rem; cursor: pointer; line-height: 1;
+    transition: border-color 0.2s;
+  }
+  .loop-num button:hover { border-color: var(--accent); }
+  .loop-num span { font-family: var(--mono); font-size: 0.9rem; min-width: 24px; text-align: center; }
+
+  .ctrl-row { display: flex; gap: 8px; margin-bottom: 0.6rem; }
+  .btn-ab {
+    flex: 1; padding: 9px;
+    border-radius: 6px;
+    font-family: var(--serif);
+    font-size: 0.8rem;
+    cursor: pointer;
+    border: 1px solid;
+    transition: opacity 0.2s;
+    letter-spacing: 0.04em;
+  }
+  .btn-ab:hover { opacity: 0.85; }
+  .btn-start { background: var(--accent); color: #0e0f11; border-color: var(--accent); }
+  .btn-reset { background: transparent; color: var(--muted); border-color: var(--border); }
+  .status { font-size: 0.72rem; color: var(--muted); text-align: center; min-height: 16px; letter-spacing: 0.03em; }
+
+  /* ── PDF / 참고영상 ── */
+  .pdf-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0.9rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: border-color 0.2s;
+    margin-bottom: 8px;
+  }
+  .pdf-link:hover { border-color: var(--accent); color: var(--accent); }
+  .pdf-icon { font-size: 1.2rem; }
+  .ref-videos { display: flex; flex-direction: column; gap: 8px; }
+  .ref-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0.75rem 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 0.82rem;
+    transition: border-color 0.2s;
+  }
+  .ref-item:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .loading { text-align: center; padding: 3rem; color: var(--muted); font-size: 0.85rem; letter-spacing: 0.1em; }
+  .error { text-align: center; padding: 2rem; color: #e24b4a; font-size: 0.82rem; }
+
+  /* ── 스크롤바 ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎵 플루트 연습 모음</h1>
+  <p>월별 · 곡별 · AB 구간 반복 연습</p>
+</header>
+
+<div id="app"><div class="loading">악보 데이터를 불러오는 중...</div></div>
+
+<!-- YouTube IFrame API -->
+<script>
+// ─────────────────────────────────────────────
+// ★ 설정: 본인 Google Sheets 공유 ID로 교체하세요
+// ─────────────────────────────────────────────
+// Google Sheets를 "링크가 있는 모든 사용자" 로 공유한 뒤
+// URL에서 /d/ 뒤의 ID를 복사해 아래에 붙여넣으세요.
+const SHEET_ID = '1yKz1_QEg25Xn2gmwD8-ygL1_EGL3eeuFygKjQ6HLSa4';
+
+// Sheets 탭(시트) 이름 (기본값: Sheet1)
+const SHEET_NAME = 'Sheet1';
+// ─────────────────────────────────────────────
+
+// 데이터 컬럼 순서 (헤더 행 기준)
+// month | song_title | youtube_url | pdf_url | ref1_title | ref1_url | ref2_title | ref2_url
+
+let ytAPI = false;
+let players = {}; // songId → {player, ptA, ptB, loopCount, loopDone, abActive, ticker}
+
+window.onYouTubeIframeAPIReady = () => { ytAPI = true; };
+const ytTag = document.createElement('script');
+ytTag.src = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(ytTag);
+
+// ── 데이터 로드 ──────────────────────────────
+async function loadData() {
+  // 샘플 데이터 (Sheets 연결 전 미리보기용)
+  const sample = [
+    {
+      month: '4월',
+      songs: [
+        {
+          title: '연가 (Liebeslied)',
+          youtube: 'https://youtu.be/lPbeM4XuJAY?si=33xmr_SMQZVemdwe',
+          pdf: '',
+          refs: []
+        }
+      ]
+    }
+  ];
+
+  if (SHEET_ID === 'YOUR_GOOGLE_SHEET_ID') {
+    renderAll(sample);
+    document.querySelector('.loading') && (document.querySelector('.loading').remove());
+    return;
+  }
+
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
+    const res = await fetch(url);
+    const text = await res.text();
+    const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+    const rows = json.table.rows;
+
+    const map = {};
+    rows.forEach(r => {
+      const cols = r.c || [];
+      const g = v => (cols[v] && cols[v].v != null) ? String(cols[v].v).trim() : '';
+      const month = g(0);
+      if (!month) return;
+      if (!map[month]) map[month] = [];
+      map[month].push({
+        title: g(1),
+        youtube: g(2),
+        pdf: g(3),
+        refs: [
+          g(4) && g(5) ? { title: g(4), url: g(5) } : null,
+          g(6) && g(7) ? { title: g(6), url: g(7) } : null,
+        ].filter(Boolean)
+      });
+    });
+
+    const data = Object.entries(map).map(([month, songs]) => ({ month, songs }));
+    renderAll(data);
+  } catch (e) {
+    document.getElementById('app').innerHTML = `<div class="error">데이터를 불러오지 못했습니다.<br>${e.message}</div>`;
+  }
+}
+
+// ── 렌더링 ────────────────────────────────────
+function renderAll(data) {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  data.forEach((m, mi) => {
+    const sec = document.createElement('div');
+    sec.className = 'month-section';
+    sec.innerHTML = `
+      <div class="month-toggle" onclick="toggleMonth(this)">
+        <span class="arrow">▶</span>
+        <span class="month-label">${m.month}</span>
+        <span class="count">${m.songs.length}곡</span>
+      </div>
+      <div class="month-body">
+        ${m.songs.map((s, si) => renderSong(s, `m${mi}s${si}`)).join('')}
+      </div>`;
+    app.appendChild(sec);
+    m.songs.forEach((s, si) => {
+      const sid = `m${mi}s${si}`;
+      players[sid] = { ptA: null, ptB: null, loopCount: 0, loopDone: 0, abActive: false, ticker: null, player: null };
+    });
+  });
+}
+
+function renderSong(s, sid) {
+  const vid = extractVideoId(s.youtube);
+  const hasPdf = !!s.pdf;
+  const hasRefs = s.refs && s.refs.length > 0;
+
+  return `
+  <div class="song-card">
+    <div class="song-header" onclick="toggleSong(this, '${sid}', '${vid}')">
+      <span class="song-num">${sid.split('s')[1] * 1 + 1}</span>
+      <span class="song-title">${s.title}</span>
+      <span class="song-arrow">▶</span>
+    </div>
+    <div class="song-body" id="body-${sid}">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('${sid}','play',this)">▶ 연습 플레이어</button>
+        ${hasPdf ? `<button class="tab-btn" onclick="switchTab('${sid}','pdf',this)">📄 악보</button>` : ''}
+        ${hasRefs ? `<button class="tab-btn" onclick="switchTab('${sid}','refs',this)">🎬 참고영상</button>` : ''}
+      </div>
+
+      <div class="tab-pane active" id="${sid}-play">
+        <div class="yt-frame-wrap">
+          <div id="yt-${sid}"></div>
+        </div>
+        <div class="time-display" id="td-${sid}">00:00.0 / 00:00</div>
+        <div class="ab-grid">
+          <div class="ab-pt" id="abA-${sid}" onclick="setPoint('${sid}','A')">
+            <div class="pt-label">A 시작점 — 클릭해서 설정</div>
+            <div class="pt-val" id="valA-${sid}">--:--</div>
+          </div>
+          <div class="ab-pt" id="abB-${sid}" onclick="setPoint('${sid}','B')">
+            <div class="pt-label">B 끝점 — 클릭해서 설정</div>
+            <div class="pt-val" id="valB-${sid}">--:--</div>
+          </div>
+        </div>
+        <div class="loop-row">
+          <label>반복 횟수 <span style="font-size:0.7rem;opacity:0.5">(0 = 무한)</span></label>
+          <div class="loop-num">
+            <button onclick="changeLoop('${sid}',-1)">−</button>
+            <span id="lc-${sid}">0</span>
+            <button onclick="changeLoop('${sid}',+1)">+</button>
+          </div>
+        </div>
+        <div class="ctrl-row">
+          <button class="btn-ab btn-start" onclick="startAB('${sid}')">🔁 AB 반복 시작</button>
+          <button class="btn-ab btn-reset" onclick="resetAB('${sid}')">✕ 초기화</button>
+        </div>
+        <div class="status" id="st-${sid}">재생 중 A·B 버튼을 눌러 구간을 지정하세요</div>
+      </div>
+
+      ${hasPdf ? `
+      <div class="tab-pane" id="${sid}-pdf">
+        <a class="pdf-link" href="${s.pdf}" target="_blank">
+          <span class="pdf-icon">📄</span>
+          <span>${s.title} — 악보 열기 (Google Drive)</span>
+        </a>
+        <p style="font-size:0.72rem;color:var(--muted);margin-top:6px;">새 탭에서 악보가 열립니다</p>
+      </div>` : ''}
+
+      ${hasRefs ? `
+      <div class="tab-pane" id="${sid}-refs">
+        <div class="ref-videos">
+          ${s.refs.map(r => `
+          <a class="ref-item" href="${r.url}" target="_blank">
+            <span>🎬</span>
+            <span>${r.title}</span>
+          </a>`).join('')}
+        </div>
+      </div>` : ''}
+    </div>
+  </div>`;
+}
+
+// ── 토글 ─────────────────────────────────────
+function toggleMonth(el) {
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
+}
+function toggleSong(el, sid, vid) {
+  el.classList.toggle('open');
+  const body = document.getElementById('body-' + sid);
+  body.classList.toggle('open');
+  if (body.classList.contains('open') && !players[sid].player) {
+    initPlayer(sid, vid);
+  }
+}
+function switchTab(sid, tab, btn) {
+  btn.closest('.song-body').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  btn.closest('.song-body').querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById(sid + '-' + tab).classList.add('active');
+}
+
+// ── 유튜브 ────────────────────────────────────
+function initPlayer(sid, vid) {
+  if (!vid) return;
+  const tryInit = () => {
+    if (!ytAPI) { setTimeout(tryInit, 300); return; }
+    players[sid].player = new YT.Player('yt-' + sid, {
+      videoId: vid,
+      width: '100%', height: '100%',
+      playerVars: { rel: 0, modestbranding: 1 },
+      events: {
+        onReady: () => startTicker(sid)
+      }
+    });
+  };
+  tryInit();
+}
+
+function startTicker(sid) {
+  if (players[sid].ticker) clearInterval(players[sid].ticker);
+  players[sid].ticker = setInterval(() => {
+    const p = players[sid];
+    if (!p.player || !p.player.getCurrentTime) return;
+    const cur = p.player.getCurrentTime();
+    const dur = p.player.getDuration() || 0;
+    const td = document.getElementById('td-' + sid);
+    if (td) td.textContent = fmtMs(cur) + ' / ' + fmt(dur);
+    if (p.abActive && p.ptA !== null && p.ptB !== null && cur >= p.ptB) {
+      if (p.loopCount === 0) {
+        p.player.seekTo(p.ptA, true);
+      } else {
+        p.loopDone++;
+        if (p.loopDone >= p.loopCount) {
+          p.abActive = false;
+          setSt(sid, '✅ 반복 완료 (' + p.loopCount + '회)');
+        } else {
+          p.player.seekTo(p.ptA, true);
+          setSt(sid, '반복 중... ' + p.loopDone + ' / ' + p.loopCount + '회');
+        }
+      }
+    }
+  }, 100);
+}
+
+function setPoint(sid, pt) {
+  const p = players[sid];
+  if (!p.player || !p.player.getCurrentTime) { setSt(sid, '영상을 먼저 열어주세요'); return; }
+  const t = p.player.getCurrentTime();
+  if (pt === 'A') {
+    p.ptA = t;
+    document.getElementById('valA-' + sid).textContent = fmt(t);
+    document.getElementById('abA-' + sid).classList.add('set');
+    document.querySelector('#abA-' + sid + ' .pt-label').textContent = 'A 시작점 ✓';
+    setSt(sid, 'A 설정: ' + fmt(t) + ' → B 끝점을 클릭하세요');
+  } else {
+    if (p.ptA !== null && t <= p.ptA) { setSt(sid, '끝점은 시작점 이후여야 합니다'); return; }
+    p.ptB = t;
+    document.getElementById('valB-' + sid).textContent = fmt(t);
+    document.getElementById('abB-' + sid).classList.add('set');
+    document.querySelector('#abB-' + sid + ' .pt-label').textContent = 'B 끝점 ✓';
+    setSt(sid, 'B 설정: ' + fmt(t) + ' → AB 반복 시작 버튼을 누르세요');
+  }
+}
+
+function changeLoop(sid, d) {
+  const p = players[sid];
+  p.loopCount = Math.max(0, p.loopCount + d);
+  document.getElementById('lc-' + sid).textContent = p.loopCount;
+}
+
+function startAB(sid) {
+  const p = players[sid];
+  if (!p.player) { setSt(sid, '영상을 먼저 열어주세요'); return; }
+  if (p.ptA === null || p.ptB === null) { setSt(sid, 'A·B 구간을 모두 설정하세요'); return; }
+  p.abActive = true; p.loopDone = 0;
+  p.player.seekTo(p.ptA, true);
+  p.player.playVideo();
+  setSt(sid, '🔁 ' + fmt(p.ptA) + ' ↔ ' + fmt(p.ptB) + ' ' + (p.loopCount === 0 ? '무한반복' : p.loopCount + '회 반복'));
+}
+
+function resetAB(sid) {
+  const p = players[sid];
+  p.ptA = null; p.ptB = null; p.loopDone = 0; p.abActive = false;
+  ['A','B'].forEach(pt => {
+    const id = 'ab' + pt + '-' + sid;
+    document.getElementById('ab'+pt+'-'+sid).classList.remove('set');
+    document.getElementById('val'+pt+'-'+sid).textContent = '--:--';
+    document.querySelector('#' + id + ' .pt-label').textContent = pt === 'A' ? 'A 시작점 — 클릭해서 설정' : 'B 끝점 — 클릭해서 설정';
+  });
+  setSt(sid, '초기화되었습니다');
+}
+
+// ── 유틸 ─────────────────────────────────────
+function fmt(s) {
+  if (s == null || isNaN(s)) return '--:--';
+  return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(Math.floor(s%60)).padStart(2,'0');
+}
+function fmtMs(s) {
+  if (isNaN(s)) return '00:00.0';
+  return String(Math.floor(s/60)).padStart(2,'0') + ':' + (s%60).toFixed(1).padStart(4,'0');
+}
+function setSt(sid, msg) {
+  const el = document.getElementById('st-' + sid);
+  if (el) el.textContent = msg;
+}
+function extractVideoId(url) {
+  if (!url) return '';
+  const m = url.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([^?&\s]+)/);
+  return m ? m[1] : url.trim();
+}
+
+loadData();
+</script>
+</body>
+</html>
